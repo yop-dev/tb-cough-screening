@@ -4,7 +4,7 @@ This repository contains code for training and evaluating lightweight TB cough-s
 
 ## 📁 Repository Structure
 
-
+```text
 .
 ├── data/
 │   ├── raw/                # (gitignored) place your .wav files here
@@ -25,6 +25,7 @@ This repository contains code for training and evaluating lightweight TB cough-s
 ├── requirements.txt        # Python deps for PyTorch side
 ├── environment.yml         # (optional) conda env for Keras side
 └── README.md
+
 
 
 
