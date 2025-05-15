@@ -93,19 +93,23 @@ This repository contains code for training and evaluating lightweight TB cough-s
         --lr 1e-3
 
 
-📊 Outputs
+**📊 Outputs**
+
 outputs/ contains model weights (.pth or .h5) and training histories (.json).
 
 Use your own analysis scripts or notebooks to plot ROC curves, bootstrap CIs, etc.
 
-🔬 Reproducibility
+**🔬 Reproducibility**
+
 Fixed seeds (NumPy, PyTorch, TensorFlow) ensure consistent results.
 
-Hyperparameters (batch size, LR, epochs, model variants) are configurable via CLI flags.
+
+**Hyperparameters (batch size, LR, epochs, model variants) are configurable via CLI flags.**
 
 A bootstrap CI script (scripts/bootstrap_ci.py, optional) can estimate uncertainty on CV AUC differences.
 
-🙏 Acknowledgments
+** Acknowledgments**
+
 Inspired by the Res2Net and Temporal Shift Module (TSM) papers.
 
 Thanks to the CODA DREAM challenge for the cough dataset.
