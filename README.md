@@ -1,4 +1,4 @@
-# Res2TSM-Enhanced-MobileNetV4-for-TB-Cough-Analysis
+# Res2TSM Enhanced MobileNetV4 for TB-Cough Analysis
 
 This repository contains code for training and evaluating lightweight TB cough-screening models, including Res2TSM-enhanced MobileNetV4 variants in PyTorch and a suite of Keras baselines.
 
