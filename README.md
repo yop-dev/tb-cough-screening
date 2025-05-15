@@ -4,7 +4,7 @@ This repository contains code for training and evaluating lightweight TB cough-s
 
       ## 📁 Repository Structure
       
-      ```text
+
       .
       ├── data/
       │   ├── raw/                # (gitignored) place your .wav files here
@@ -26,7 +26,6 @@ This repository contains code for training and evaluating lightweight TB cough-s
       ├── environment.yml         # (optional) conda env for Keras side
       └── README.md
       
-      ```text
 
 
 ## 🚀 Quickstart
@@ -37,59 +36,61 @@ This repository contains code for training and evaluating lightweight TB cough-s
    cd tb-cough-screening
 
 2. **Install Dependencies**
-   
-  - PyTorch side
-     pip install -r requirements.txt
-   
-  - Keras side (if using conda)
-     conda env create -f environment.yml
-     conda activate tb-cough
+   ````
+        - PyTorch side
+           pip install -r requirements.txt
+         
+        - Keras side (if using conda)
+           conda env create -f environment.yml
+           conda activate tb-cough
 
 3. **Download / place data**
-
+   ````
    - Gather dataset (e.g from CODA)
 
 4. **Preprocess Audio**
-
+   ````
    - python scripts/preprocess.py
 
 5.**Split Data**
 
-  - python scripts/split_data.py
+      - python scripts/split_data.py
 
 6. **Train Pytorch Model**
 
-   python scripts/train_pytorch.py \
-  --model v4_r2tsm \
-  --train-files data/splits/train_files.npy \
-  --train-labels data/splits/train_labels.npy \
-  --val-files data/splits/val_files.npy \
-  --val-labels data/splits/val_labels.npy \
-  --data-dir data/specs/train \
-  --epochs 15 \
-  --batch-size 32 \
-  --lr 1e-3
+         python scripts/train_pytorch.py \
+        --model v4_r2tsm \
+        --train-files data/splits/train_files.npy \
+        --train-labels data/splits/train_labels.npy \
+        --val-files data/splits/val_files.npy \
+        --val-labels data/splits/val_labels.npy \
+        --data-dir data/specs/train \
+        --epochs 15 \
+        --batch-size 32 \
+        --lr 1e-3
 
 7. **Train Keras Model**
-   python scripts/train_keras.py \
-  --model mnet2 \
-  --train-files data/splits/train_files.npy \
-  --train-labels data/splits/train_labels.npy \
-  --val-files data/splits/val_files.npy \
-  --val-labels data/splits/val_labels.npy \
-  --data-dirs data/specs/train \
-  --epochs 15 \
-  --batch-size 32 \
-  --lr 1e-3
+   
+         python scripts/train_keras.py \
+        --model mnet2 \
+        --train-files data/splits/train_files.npy \
+        --train-labels data/splits/train_labels.npy \
+        --val-files data/splits/val_files.npy \
+        --val-labels data/splits/val_labels.npy \
+        --data-dirs data/specs/train \
+        --epochs 15 \
+        --batch-size 32 \
+        --lr 1e-3
 
-8. **Cross Validation (MobileNetV4 Conv Blur Medium)**
-   python scripts/cross_val.py \
-  --spec-dir data/specs/train \
-  --labels-csv data/labels.csv \
-  --n-splits 3 \
-  --epochs 15 \
-  --batch-size 32 \
-  --lr 1e-3
+9. **Cross Validation (MobileNetV4 Conv Blur Medium)**
+    
+         python scripts/cross_val.py \
+        --spec-dir data/specs/train \
+        --labels-csv data/labels.csv \
+        --n-splits 3 \
+        --epochs 15 \
+        --batch-size 32 \
+        --lr 1e-3
 
 
 📊 Outputs
