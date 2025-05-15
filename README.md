@@ -2,31 +2,31 @@
 
 This repository contains code for training and evaluating lightweight TB cough-screening models, including Res2TSM-enhanced MobileNetV4 variants in PyTorch and a suite of Keras baselines.
 
-## 📁 Repository Structure
-
-```text
-.
-├── data/
-│   ├── raw/                # (gitignored) place your .wav files here
-│   ├── specs/              # auto-generated .npy spectrograms
-│   └── splits/             # train/val/test and CV fold lists
-├── models/
-│   ├── pytorch/            # PyTorch MobileNetV4 + variants
-│   │   └── mobilenetv4_conv_blur_medium.py
-│   └── keras/              # Keras baseline architectures
-│       └── base_models.py
-├── scripts/
-│   ├── preprocess.py       # .wav → log-Mel spectrograms
-│   ├── split_data.py       # create train/val/test and CV splits
-│   ├── train_pytorch.py    # train any PyTorch model via `--model`
-│   ├── train_keras.py      # train any Keras model via `--model`
-│   └── cross_val.py        # 3-fold CV for the four PyTorch variants
-├── outputs/                # saved checkpoints & history files
-├── requirements.txt        # Python deps for PyTorch side
-├── environment.yml         # (optional) conda env for Keras side
-└── README.md
-
-
+      ## 📁 Repository Structure
+      
+      ```text
+      .
+      ├── data/
+      │   ├── raw/                # (gitignored) place your .wav files here
+      │   ├── specs/              # auto-generated .npy spectrograms
+      │   └── splits/             # train/val/test and CV fold lists
+      ├── models/
+      │   ├── pytorch/            # PyTorch MobileNetV4 + variants
+      │   │   └── mobilenetv4_conv_blur_medium.py
+      │   └── keras/              # Keras baseline architectures
+      │       └── base_models.py
+      ├── scripts/
+      │   ├── preprocess.py       # .wav → log-Mel spectrograms
+      │   ├── split_data.py       # create train/val/test and CV splits
+      │   ├── train_pytorch.py    # train any PyTorch model via `--model`
+      │   ├── train_keras.py      # train any Keras model via `--model`
+      │   └── cross_val.py        # 3-fold CV for the four PyTorch variants
+      ├── outputs/                # saved checkpoints & history files
+      ├── requirements.txt        # Python deps for PyTorch side
+      ├── environment.yml         # (optional) conda env for Keras side
+      └── README.md
+      
+      ```text
 
 
 ## 🚀 Quickstart
