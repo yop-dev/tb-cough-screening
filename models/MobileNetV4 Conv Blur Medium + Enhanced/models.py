@@ -1,6 +1,6 @@
 import timm
 import torch.nn as nn
-from ..utils import Res2TSMBlock, Res2NetBlock, TemporalShift
+from .utils import Res2TSMBlock, Res2NetBlock, TemporalShift
 
 
 class MobileNetV4_Base(nn.Module):
