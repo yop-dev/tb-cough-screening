@@ -7,14 +7,24 @@ from torch.utils.data import Dataset, DataLoader
 from tqdm.auto import tqdm
 import timm
 from sklearn.metrics import accuracy_score, roc_auc_score, precision_score, recall_score, f1_score
-from ..utils import Res2TSMBlock, Res2NetBlock, TemporalShift
+from models.MobileNetV4_Conv_Blur_Medium_Enhanced.utils import Res2TSMBlock, Res2NetBlock, TemporalShift
 
 # Custom imports
-from models.pytorch.mobilenetv4_conv_blur_medium.models import (
+from models.MobileNetV4_Conv_Blur_Medium_Enhanced.models import (
     MobileNetV4_Base,
     MobileNetV4_TSM,
     MobileNetV4_Res2Net,
     MobileNetV4_Res2TSM
+)
+# Import PyTorch baseline models
+from models.pytorch_baselines.base_models import (
+    MobileNetV2_PyTorch,
+    MobileNetV3Small_PyTorch,
+    EfficientNetB0_PyTorch,
+    EfficientNetB3_PyTorch,
+    ResNet50_PyTorch,
+    InceptionV3_PyTorch,
+    DenseNet121_PyTorch
 )
 
 class SpectrogramDataset(Dataset):
@@ -35,13 +45,17 @@ class SpectrogramDataset(Dataset):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('--model', choices=['v4_base','v4_tsm','v4_r2n','v4_r2tsm','v4_small','v4_hybrid'], required=True)
+    p.add_argument('--model', choices=[
+        'v4_base','v4_tsm','v4_r2n','v4_r2tsm','v4_small','v4_hybrid', # Existing MobileNetV4 variants
+        'mnet2_pt', 'mnet3s_pt', 'effb0_pt', 'effb3_pt', 'res50_pt', 'incepv3_pt', 'dnet121_pt' # New PyTorch baselines
+    ], required=True)
     p.add_argument('--train-files'); p.add_argument('--train-labels')
     p.add_argument('--val-files');   p.add_argument('--val-labels')
     p.add_argument('--batch-size', type=int, default=32)
     p.add_argument('--epochs',     type=int, default=15)
     p.add_argument('--lr',         type=float, default=1e-3)
     p.add_argument('--data-dir',   default='data/specs/train')
+    p.add_argument('--dropout-rate', type=float, default=0.5, help="Dropout rate for model head")
     p.add_argument('--verbose',    action='store_true')
     args = p.parse_args()
 
@@ -62,26 +76,63 @@ if __name__ == '__main__':
                               batch_size=args.batch_size, shuffle=False)
 
     # model selection
+    params = {'dropout': args.dropout_rate} # For MobileNetV4_Conv_Blur_Medium_Enhanced models
+    baseline_params = {'dropout_rate': args.dropout_rate, 'pretrained': True, 'in_chans': 3} # For PyTorch baselines
+
     if args.model == 'v4_base':
         Model = MobileNetV4_Base
-        params = {'model_key':'mobilenetv4_conv_blur_medium'}
+        params['model_key'] = 'mobilenetv4_conv_blur_medium'
     elif args.model == 'v4_tsm':
-        Model = MobileNetV4_TSM;    params = {'model_key':'mobilenetv4_conv_blur_medium'}
+        Model = MobileNetV4_TSM
+        params['model_key'] = 'mobilenetv4_conv_blur_medium'
     elif args.model == 'v4_r2n':
-        Model = MobileNetV4_Res2Net; params = {'model_key':'mobilenetv4_conv_blur_medium'}
+        Model = MobileNetV4_Res2Net
+        params['model_key'] = 'mobilenetv4_conv_blur_medium'
     elif args.model == 'v4_r2tsm':
-        Model = MobileNetV4_Res2TSM; params = {'model_key':'mobilenetv4_conv_blur_medium'}
+        Model = MobileNetV4_Res2TSM
+        params['model_key'] = 'mobilenetv4_conv_blur_medium'
+    # New PyTorch Baselines
+    elif args.model == 'mnet2_pt':
+        Model = MobileNetV2_PyTorch
+        params = baseline_params
+    elif args.model == 'mnet3s_pt':
+        Model = MobileNetV3Small_PyTorch
+        params = baseline_params
+    elif args.model == 'effb0_pt':
+        Model = EfficientNetB0_PyTorch
+        params = baseline_params
+    elif args.model == 'effb3_pt':
+        Model = EfficientNetB3_PyTorch
+        params = baseline_params
+    elif args.model == 'res50_pt':
+        Model = ResNet50_PyTorch
+        params = baseline_params
+    elif args.model == 'incepv3_pt':
+        Model = InceptionV3_PyTorch
+        params = baseline_params
+    elif args.model == 'dnet121_pt':
+        Model = DenseNet121_PyTorch
+        params = baseline_params
+    # Timm direct models (less configurable head dropout here unless we rebuild them like baselines)
     elif args.model == 'v4_small':
-        # timm small conv
-        model = timm.create_model('mobilenetv4_conv_small', pretrained=True, num_classes=1, in_chans=3)
-        model.classifier = nn.Sequential(nn.Linear(model.classifier.in_features,1), nn.Sigmoid())
+        # For these timm models, dropout is typically part of create_model (e.g. drop_rate)
+        # The current setup for these does not use the args.dropout_rate for head.
+        # To make it consistent, these would also need to be wrapped in a class like TimmBaselineClassifier
+        # or adjust their head manually. For now, keeping original behavior.
+        model = timm.create_model('mobilenetv4_conv_small', pretrained=True, num_classes=1, in_chans=3, drop_rate=args.dropout_rate)
+        # model.classifier = nn.Sequential(nn.Linear(model.classifier.in_features,1), nn.Sigmoid()) # timm already adds sigmoid for num_classes=1 if from_logits=False
+        # Forcing a Sigmoid as BCELoss expects probabilities. Timm's num_classes=1 might give logits.
+        if model.num_classes == 1 and not hasattr(model.get_classifier(), 'out_act'): # A bit heuristic
+             model.classifier = nn.Sequential(model.get_classifier(), nn.Sigmoid())
         model = model.to(device)
     elif args.model == 'v4_hybrid':
-        model = timm.create_model('mobilenetv4_hybrid_medium', pretrained=True, num_classes=1, in_chans=3)
-        model.classifier = nn.Sequential(nn.Linear(model.classifier.in_features,1), nn.Sigmoid())
+        model = timm.create_model('mobilenetv4_hybrid_medium', pretrained=True, num_classes=1, in_chans=3, drop_rate=args.dropout_rate)
+        if model.num_classes == 1 and not hasattr(model.get_classifier(), 'out_act'):
+             model.classifier = nn.Sequential(model.get_classifier(), nn.Sigmoid())
         model = model.to(device)
 
-    if 'model' in locals():
+    # Instantiate model if not already done (for non-timm direct models)
+    if 'Model' in locals() and 'model' not in locals():
         model = Model(**params).to(device)
 
     criterion = nn.BCELoss()

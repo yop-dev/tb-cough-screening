@@ -12,7 +12,7 @@ from sklearn.model_selection import StratifiedKFold
 from tqdm.auto import tqdm
 
 # Import your four variants
-from models.pytorch.mobilenetv4_conv_blur_medium.models import (
+from models.MobileNetV4_Conv_Blur_Medium_Enhanced.models import (
     MobileNetV4_Base,
     MobileNetV4_TSM,
     MobileNetV4_Res2Net,
