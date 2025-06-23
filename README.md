@@ -1,35 +1,40 @@
-# Lightweight TB Cough Screening using PyTorch with Res2TSM-Enhanced MobileNetV4
+# Lightweight TB Cough Screening using PyTorch with Res2TSM-Enhanced and Baseline CNNs
 
-This repository provides a PyTorch-based framework for training and evaluating lightweight models for Tuberculosis (TB) screening using cough sounds. The core models are Res2TSM-enhanced variants of MobileNetV4, designed for efficient and accurate classification.
+This repository provides a PyTorch-based framework for training and evaluating lightweight models for Tuberculosis (TB) screening using cough sounds. It includes advanced Res2TSM-enhanced MobileNetV4 variants and a suite of standard CNN baseline models, all implemented in PyTorch.
 
 ## 📝 Project Overview
 
-The project aims to leverage deep learning techniques to develop accessible TB screening tools. By analyzing log-Mel spectrograms of cough sounds, the models can identify potential TB indicators. This implementation uses PyTorch for all model training and evaluation tasks.
+The project aims to leverage deep learning techniques to develop accessible TB screening tools. By analyzing log-Mel spectrograms of cough sounds, the models can identify potential TB indicators. This implementation exclusively uses PyTorch for all model training and evaluation tasks.
 
 **Key Features:**
--   **PyTorch Exclusivity:** All models and training pipelines are implemented in PyTorch.
--   **Advanced Architectures:** Utilizes MobileNetV4 variants, enhanced with Res2Net and Temporal Shift Modules (TSM) for improved feature extraction from spectrograms.
--   **Data Preprocessing:** Includes scripts to convert raw audio files (`.wav`) into log-Mel spectrograms (`.npy`) suitable for model input.
--   **Flexible Training:** Supports training various MobileNetV4 configurations with customizable parameters.
--   **Reproducibility:** Employs fixed seeds for consistent results across experiments.
+-   **PyTorch Implementation:** All models and training pipelines are implemented in PyTorch.
+-   **Advanced Architectures:** Features MobileNetV4 variants enhanced with Res2Net and Temporal Shift Modules (TSM).
+-   **Baseline Models:** Includes PyTorch implementations of common CNN architectures (MobileNetV2, MobileNetV3Small, EfficientNetB0/B3, ResNet50, InceptionV3, DenseNet121) for comparative studies. These are derived from Keras application counterparts.
+-   **Data Preprocessing:** Includes scripts to convert raw audio files (`.wav`) into log-Mel spectrograms (`.npy`).
+-   **Flexible Training:** Supports training all included PyTorch models with customizable parameters.
+-   **Reproducibility:** Employs fixed seeds for consistent results.
 
 ## 📁 Repository Structure
 
 ```
 .
 ├── data/
-│   ├── raw/                # (gitignored) Place your .wav audio files here (e.g., data/raw/train, data/raw/val)
+│   ├── raw/                # (gitignored) Place your .wav audio files here
 │   ├── specs/              # Auto-generated .npy log-Mel spectrograms
-│   └── splits/             # Auto-generated train/validation/test file lists and CV folds
+│   └── splits/             # Auto-generated train/val/test file lists and CV folds
 │       └── split_data.py   # Script to create data splits
 ├── models/
-│   └── MobileNetV4_Conv_Blur_Medium_Enhanced/ # PyTorch MobileNetV4 models and utilities
-│       ├── models.py       # Model definitions (MobileNetV4_Base, _TSM, _Res2Net, _Res2TSM)
-│       └── utils.py        # Utility modules (Res2TSMBlock, Res2NetBlock, TemporalShift)
+│   ├── MobileNetV4_Conv_Blur_Medium_Enhanced/ # PyTorch MobileNetV4 models and utilities
+│   │   ├── models.py       # Custom MobileNetV4 variants (Base, TSM, Res2Net, Res2TSM)
+│   │   └── utils.py        # Utility modules for enhancements
+│   ├── pytorch_baselines/  # PyTorch baseline CNN model definitions
+│   │   └── base_models.py  # PyTorch versions of standard CNNs
+│   └── keras/              # Original Keras baseline model definitions (for reference)
+│       └── base_models.py
 ├── scripts/
 │   ├── preprocess.py       # Converts .wav audio to log-Mel spectrograms
-│   ├── train_pytorch.py    # Trains PyTorch models
-│   └── cross_k-fold        # Script for k-fold cross-validation (if applicable)
+│   ├── train_pytorch.py    # Trains all PyTorch models (enhanced and baselines)
+│   └── cross_k-fold        # Script for k-fold cross-validation for PyTorch models
 ├── outputs/                # (gitignored) Saved model checkpoints (.pth) and training histories (.json)
 ├── requirements.txt        # Python dependencies for the project
 └── README.md
@@ -37,7 +42,7 @@ The project aims to leverage deep learning techniques to develop accessible TB s
 
 ## 🚀 Getting Started
 
-Follow these steps to set up the project and train your first model.
+Follow these steps to set up the project and train your models.
 
 ### 1. Clone the Repository
 ```bash
@@ -52,42 +57,27 @@ pip install -r requirements.txt
 ```
 
 ### 3. Prepare Your Data
--   Place your raw cough audio files (in `.wav` format) into the `data/raw/` directory. You can create subdirectories like `data/raw/train`, `data/raw/val`, etc., if you have pre-split data.
--   If your dataset is not yet split, you can place all audio files in a common directory within `data/raw/`.
+-   Place raw cough audio files (`.wav`) into `data/raw/`. Subdirectories like `data/raw/train` are supported by `scripts/preprocess.py`.
+-   Modify `scripts/preprocess.py`'s `RAW_DIRS` list to point to your data locations.
 
 ### 4. Preprocess Audio Data
-Convert the raw `.wav` files into log-Mel spectrograms. The `preprocess.py` script handles this conversion.
-
-**Configuration (inside `scripts/preprocess.py`):**
--   Update `RAW_DIRS`: List of directories containing your raw `.wav` files (e.g., `["data/raw/train", "data/raw/val"]`).
--   `OUT_DIR`: Directory where spectrograms (`.npy` files) will be saved (default: `data/specs`).
--   Other parameters like `SR` (sampling rate), `DURATION`, `N_MELS`, etc., can be adjusted as needed.
-
-**Run Preprocessing:**
+Convert `.wav` files into log-Mel spectrograms using `scripts/preprocess.py`.
 ```bash
 python scripts/preprocess.py
 ```
-This will generate `.npy` files in the `data/specs/` directory, mirroring the structure of `RAW_DIRS`.
+Spectrograms (`.npy` files) will be saved in `data/specs/`, mirroring `RAW_DIRS` structure.
 
-### 5. Split Data for Training and Evaluation
-Create train, validation, and (optionally) test sets, along with k-fold cross-validation splits if needed. The `split_data.py` script uses the generated spectrograms.
-
-**Configuration (inside `data/splits/split_data.py`):**
--   `SPEC_DIR`: Directory containing the `.npy` spectrograms (e.g., `data/specs/train` if your spectrograms are in a 'train' subfolder).
--   `OUT_DIR`: Directory where the split files (`train_files.npy`, `val_labels.npy`, etc.) will be saved (default: `data/splits`).
--   Adjust `TEST_SIZE`, `VAL_SIZE`, `RANDOM_STATE`, and `N_FOLDS` as required.
--   **Important:** Modify the `labels` array creation logic based on your filename conventions or if you have a separate metadata file for labels. The current example derives labels from filenames containing "Positive" or "Negative".
-
-**Run Data Splitting:**
+### 5. Split Data for Training
+Create train/validation/test splits using `data/splits/split_data.py`. This script uses spectrograms from `data/specs/` (update `SPEC_DIR` in the script if needed).
 ```bash
 python data/splits/split_data.py
 ```
-This will create `.npy` files in `data/splits/` containing lists of filenames and corresponding labels for each data subset.
+Output lists are saved in `data/splits/`. **Crucially, ensure the label generation logic within this script matches your dataset's naming convention or metadata.**
 
 ### 6. Train a PyTorch Model
-Use the `train_pytorch.py` script to train your chosen MobileNetV4 variant.
+Use `scripts/train_pytorch.py` to train any of the available PyTorch models.
 
-**Example Command:**
+**Example (Enhanced MobileNetV4):**
 ```bash
 python scripts/train_pytorch.py \
     --model v4_r2tsm \
@@ -95,70 +85,84 @@ python scripts/train_pytorch.py \
     --train-labels data/splits/train_labels.npy \
     --val-files data/splits/val_files.npy \
     --val-labels data/splits/val_labels.npy \
-    --data-dir data/specs/train \  # Main directory where .npy files from train_files.npy are located
+    --data-dir data/specs/train \
     --epochs 15 \
     --batch-size 32 \
     --lr 1e-3 \
-    --output-dir outputs/models \ # Specify where to save model weights and history
-    --verbose # Optional: for detailed epoch logging
+    --dropout-rate 0.3 \
+    --output-dir outputs/models_v4_r2tsm \
+    --verbose
+```
+
+**Example (PyTorch Baseline - EfficientNetB0):**
+```bash
+python scripts/train_pytorch.py \
+    --model effb0_pt \
+    --train-files data/splits/train_files.npy \
+    --train-labels data/splits/train_labels.npy \
+    --val-files data/splits/val_files.npy \
+    --val-labels data/splits/val_labels.npy \
+    --data-dir data/specs/train \
+    --epochs 20 \
+    --batch-size 32 \
+    --lr 1e-4 \
+    --dropout-rate 0.5 \
+    --output-dir outputs/models_effb0_pt \
+    --verbose
 ```
 
 **Key Command-Line Arguments for `train_pytorch.py`:**
--   `--model`: Choose the model architecture. Options:
-    -   `v4_base`: Standard MobileNetV4 Conv Blur Medium.
-    -   `v4_tsm`: MobileNetV4 with Temporal Shift Module.
-    -   `v4_r2n`: MobileNetV4 with Res2Net block.
-    -   `v4_r2tsm`: MobileNetV4 with combined Res2TSM block.
-    -   `v4_small`: Timm's `mobilenetv4_conv_small`.
-    -   `v4_hybrid`: Timm's `mobilenetv4_hybrid_medium`.
--   `--train-files`, `--train-labels`: Paths to the `.npy` files for training data and labels.
--   `--val-files`, `--val-labels`: Paths to the `.npy` files for validation data and labels.
--   `--data-dir`: The base directory to search for the actual spectrogram `.npy` files listed in the train/val splits.
--   `--epochs`: Number of training epochs.
--   `--batch-size`: Batch size for training.
--   `--lr`: Learning rate.
--   `--output-dir`: (Optional, defaults to `outputs`) Directory to save model checkpoints (`.pth`) and training history (`.json`).
--   `--verbose`: (Optional) Print detailed logs for each epoch.
+-   `--model`: Choose the model.
+    -   Enhanced MobileNetV4: `v4_base`, `v4_tsm`, `v4_r2n`, `v4_r2tsm`, `v4_small`, `v4_hybrid`.
+    -   PyTorch Baselines: `mnet2_pt`, `mnet3s_pt`, `effb0_pt`, `effb3_pt`, `res50_pt`, `incepv3_pt`, `dnet121_pt`.
+-   `--train-files`, `--train-labels`, `--val-files`, `--val-labels`: Paths to data split files.
+-   `--data-dir`: Base directory for spectrogram `.npy` files.
+-   `--epochs`, `--batch-size`, `--lr`: Standard training parameters.
+-   `--dropout-rate`: Dropout rate for the model's classification head (default: 0.5).
+-   `--output-dir`: Directory for saving checkpoints and history (default: `outputs`).
+-   `--verbose`: Enable detailed epoch logging.
 
 ### 7. Cross-Validation (Optional)
-If you have generated k-fold splits using `data/splits/split_data.py`, you can perform cross-validation. The repository includes a script `scripts/cross_k-fold` (its usage might need to be adapted or verified based on its specific implementation, as it was not fully detailed in the initial request).
+The `scripts/cross_k-fold` script can be used for k-fold cross-validation. It iterates through folds defined by `data/splits/split_data.py` (if `N_FOLDS` > 1).
+It trains the four main MobileNetV4 variants (`v4_base`, `v4_tsm`, `v4_r2n`, `v4_r2tsm`). Modify this script if you wish to include other models in automated CV.
 
-Typically, you would iterate through each fold's training and validation files, running `scripts/train_pytorch.py` for each.
-
-**Example for `scripts/cross_k-fold` (Conceptual):**
-The `README.md` previously mentioned a `cross_val.py` script with arguments like:
+**Conceptual Usage (adapt as needed):**
 ```bash
-python scripts/cross_k-fold \ # Assuming this is the correct script
+python scripts/cross_k-fold \
     --spec-dir data/specs/train \
-    --labels-csv data/labels.csv \ # Or use generated .npy fold files
-    --n-splits 3 \ # Should align with N_FOLDS in split_data.py
+    --labels-csv data/labels.csv \ # Or adapt to use .npy split files from data/splits
+    --n-splits 3 \                 # Should match N_FOLDS from split_data.py
     --epochs 15 \
     --batch-size 32 \
     --lr 1e-3
 ```
-You may need to adjust this script or create a new one to loop through the pre-generated fold files from `data/splits/` (e.g., `fold1_train_files.npy`, `fold1_val_files.npy`, etc.) and call `train_pytorch.py` accordingly.
+The script expects labels to be loaded from a CSV or requires adaptation to use the `.npy` files generated by `data/splits/split_data.py` for each fold.
 
 ## 📊 Outputs
+-   **Model Checkpoints:** `.pth` files in the output directory.
+-   **Training History:** `.json` files with metrics per epoch.
 
--   **Model Checkpoints:** Trained model weights are saved as `.pth` files in the specified output directory (e.g., `outputs/models/`).
--   **Training History:** Training metrics (like AUC per epoch) are saved as `.json` files in the same output directory.
+## 🔬 Model Architectures
 
-You can use these outputs for further analysis, plotting ROC curves, calculating confidence intervals, etc., using your preferred tools or custom scripts.
+### Enhanced MobileNetV4 Variants
+Located in `models/MobileNetV4_Conv_Blur_Medium_Enhanced/`. These build upon `timm`'s `mobilenetv4_conv_blur_medium` with:
+-   **Res2Net Blocks:** Multi-scale feature representation.
+-   **Temporal Shift Modules (TSM):** Efficient temporal reasoning.
+-   **Res2TSM Blocks:** Combined Res2Net and TSM.
 
-## 🔬 Model Architecture
-
-The core models are based on **MobileNetV4 Conv Blur Medium**, a lightweight and efficient convolutional neural network. Enhancements include:
--   **Res2Net Blocks:** These blocks introduce multi-scale feature representation within residual blocks, allowing the network to capture features at different granularities.
--   **Temporal Shift Modules (TSM):** TSM shifts parts of channels along the temporal dimension, enabling temporal reasoning at a low computational cost, which is beneficial for sequential data like spectrograms.
--   **Res2TSM Blocks:** Combine the strengths of Res2Net and TSM for robust spatio-temporal feature learning.
-
-The specific variants available are defined in `models/MobileNetV4_Conv_Blur_Medium_Enhanced/models.py` and can be selected using the `--model` argument in `scripts/train_pytorch.py`.
+### PyTorch Baseline Models
+Located in `models/pytorch_baselines/`. These are standard CNN architectures implemented in PyTorch using `timm` backbones, with a classification head structure inspired by their Keras Application counterparts (original Keras definitions in `models/keras/` for reference).
+-   MobileNetV2 (`mnet2_pt`)
+-   MobileNetV3Small (`mnet3s_pt`)
+-   EfficientNetB0 (`effb0_pt`), EfficientNetB3 (`effb3_pt`)
+-   ResNet50 (`res50_pt`)
+-   InceptionV3 (`incepv3_pt`) - Note: Optimal input size is 299x299. `SpectrogramDataset` resizes; adjust `img_size` in `train_pytorch.py` for best results.
+-   DenseNet121 (`dnet121_pt`)
 
 ## 🔄 Reproducibility
-
-The training scripts (`train_pytorch.py`) set fixed seeds for NumPy and PyTorch to ensure that experiments are reproducible.
+Training scripts use fixed seeds for NumPy and PyTorch.
 
 ## Acknowledgments
-
--   This work is inspired by the concepts presented in the Res2Net and Temporal Shift Module (TSM) research papers.
--   Thanks to the CODA DREAM challenge for providing access to cough datasets that can be used with this framework.
+-   Inspired by Res2Net and Temporal Shift Module (TSM) papers.
+-   Baseline model structures adapted from Keras Applications.
+-   Thanks to the CODA DREAM challenge for cough datasets.
